@@ -103,7 +103,18 @@ O script criará as tabelas para:
 - Transações financeiras (receitas e despesas)
 - Metas financeiras
 
+**Observação**: Se encontrar um erro como "constraint already exists", isso indica que algumas tabelas já foram criadas anteriormente. O script foi atualizado para lidar com esses casos e executar com segurança múltiplas vezes.
+
 ## Histórico de Alterações
+
+### Correção do script de banco de dados (22/10/2025)
+- Correção do script de banco de dados
+
+
+### Correção do script de banco de dados (22/10/2025)
+- Correção do script SQL para evitar conflitos com tabelas existentes
+- Adicionado tratamento de erros para execução segura múltiplas vezes
+- Atualizada a documentação com observações sobre possíveis erros
 
 ### Simplificação da autenticação e criação do script de banco de dados (22/10/2025)
 - Simplificação da autenticação e criação do script de banco de dados
