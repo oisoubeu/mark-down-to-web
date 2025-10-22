@@ -50,9 +50,26 @@ npm install
 ```
 
 4. Configure as variáveis de ambiente:
-Crie um arquivo `.env` na raiz do projeto com as variáveis necessárias para conexão com o Supabase e outros serviços.
+Crie um arquivo `.env` na raiz do projeto com as seguintes variáveis:
 
-5. Inicie o servidor de desenvolvimento:
+```env
+VITE_SUPABASE_URL=seu_supabase_url
+VITE_SUPABASE_ANON_KEY=sua_supabase_anon_key
+```
+
+Para obter essas credenciais:
+   - Acesse o painel do [Supabase](https://app.supabase.com/)
+   - Selecione seu projeto
+   - Vá em "Project Settings" > "API"
+   - Copie a "Project URL" como `VITE_SUPABASE_URL`
+   - Copie a "anon (Public) key" como `VITE_SUPABASE_ANON_KEY`
+
+5. Configure provedores de autenticação (opcional):
+   - No painel do Supabase, vá em "Authentication" > "Settings"
+   - Habilite os provedores desejados (Google, GitHub, etc.)
+   - Configure os provedores com suas credenciais
+
+6. Inicie o servidor de desenvolvimento:
 ```sh
 npm run dev
 ```
@@ -66,7 +83,29 @@ A aplicação estará disponível em `http://localhost:5173`
 - `npm run lint` - Executa o ESLint
 - `npm run preview` - Pré-visualiza a build localmente
 
+## Recursos de Autenticação
+
+O projeto inclui um sistema completo de autenticação com as seguintes funcionalidades:
+
+- Login e cadastro com email e senha
+- Recuperação de senha por email
+- Login com provedores sociais (Google e GitHub)
+- Gerenciamento de sessão de usuário
+- Proteção de rotas para usuários autenticados
+
 ## Histórico de Alterações
+
+### Implementação do sistema de autenticação com Supabase (22/10/2025)
+- Implementação do sistema de autenticação com Supabase
+
+
+### Implementação do sistema de autenticação com Supabase (22/10/2025)
+- Configuração do cliente Supabase para autenticação
+- Criação de serviço de autenticação centralizado
+- Implementação de login com email, Google e GitHub
+- Adição de funcionalidades de recuperação de senha
+- Atualização da página de autenticação com novos recursos
+- Criação de componente de botão social reutilizável
 
 ### Configuração do sistema de rastreamento de alterações no README (22/10/2025)
 - Configuração do sistema de rastreamento de alterações no README
