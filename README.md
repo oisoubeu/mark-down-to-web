@@ -64,12 +64,7 @@ Para obter essas credenciais:
    - Copie a "Project URL" como `VITE_SUPABASE_URL`
    - Copie a "anon (Public) key" como `VITE_SUPABASE_ANON_KEY`
 
-5. Configure provedores de autenticação (opcional):
-   - No painel do Supabase, vá em "Authentication" > "Settings"
-   - Habilite os provedores desejados (Google, GitHub, etc.)
-   - Configure os provedores com suas credenciais
-
-6. Inicie o servidor de desenvolvimento:
+5. Inicie o servidor de desenvolvimento:
 ```sh
 npm run dev
 ```
@@ -89,11 +84,36 @@ O projeto inclui um sistema completo de autenticação com as seguintes funciona
 
 - Login e cadastro com email e senha
 - Recuperação de senha por email
-- Login com provedores sociais (Google e GitHub)
 - Gerenciamento de sessão de usuário
 - Proteção de rotas para usuários autenticados
 
+## Configuração do Banco de Dados
+
+O projeto utiliza o Supabase como backend e requer algumas tabelas para funcionar corretamente. Para configurar o banco de dados:
+
+1. Acesse o painel do [Supabase](https://app.supabase.com/)
+2. Selecione seu projeto
+3. Vá até a seção "SQL Editor"
+4. Copie e cole o conteúdo do arquivo `supabase_schema.sql` localizado na raiz do projeto
+5. Execute o script para criar as tabelas necessárias
+
+O script criará as tabelas para:
+- Perfis de usuários (ligados à autenticação do Supabase)
+- Categorias de transações
+- Transações financeiras (receitas e despesas)
+- Metas financeiras
+
 ## Histórico de Alterações
+
+### Simplificação da autenticação e criação do script de banco de dados (22/10/2025)
+- Simplificação da autenticação e criação do script de banco de dados
+
+
+### Simplificação da autenticação e criação do script de banco de dados (22/10/2025)
+- Remoção dos provedores sociais de autenticação (Google e GitHub)
+- Criação do script SQL para configurar as tabelas no Supabase
+- Atualização da documentação com instruções de configuração
+- Simplificação do componente de autenticação
 
 ### Implementação do sistema de autenticação com Supabase (22/10/2025)
 - Implementação do sistema de autenticação com Supabase
