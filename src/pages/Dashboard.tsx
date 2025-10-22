@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { DashboardLayout } from '@/components/DashboardLayout';
-import { supabase } from '@/lib/supabase';
+import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { TrendingUp, TrendingDown, Wallet, Target } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -46,7 +46,7 @@ export default function Dashboard() {
           .single()
       ]);
 
-      if (transactionsRes.data) setTransactions(transactionsRes.data);
+      if (transactionsRes.data) setTransactions(transactionsRes.data as Transaction[]);
       if (profileRes.data) setProfile(profileRes.data);
       setLoading(false);
     };

@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { DashboardLayout } from '@/components/DashboardLayout';
-import { supabase } from '@/lib/supabase';
+import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -53,7 +53,7 @@ export default function Transactions() {
       supabase.from('categories').select('*')
     ]);
 
-    if (transactionsRes.data) setTransactions(transactionsRes.data);
+    if (transactionsRes.data) setTransactions(transactionsRes.data as Transaction[]);
     if (categoriesRes.data) setCategories(categoriesRes.data);
     setLoading(false);
   };
