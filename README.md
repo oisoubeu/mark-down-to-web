@@ -1,73 +1,75 @@
-# Welcome to your Lovable project
+# SetDívidas - Dashboard Financeiro Pessoal
 
-## Project info
+## Descrição do Projeto
+SetDívidas é um dashboard financeiro pessoal moderno e intuitivo desenvolvido para ajudar os usuários a controlar suas finanças com inteligência. A aplicação permite organizar receitas, despesas e acompanhar metas financeiras de forma eficiente.
 
-**URL**: https://lovable.dev/projects/c88a770f-9e39-4ea3-9648-5b13cb0894a7
+**IMPORTANTE**: O nome do diretório do projeto ("mark-down-to-web") não reflete a funcionalidade real da aplicação, que é um dashboard financeiro pessoal chamado "SetDívidas".
 
-## How can I edit this code?
+## Funcionalidades
+- Dashboard completo para visualizar saldo, receitas e despesas
+- Sistema de metas financeiras com acompanhamento de progresso
+- Relatórios visuais com gráficos e análise de dados financeiros
+- Autenticação de usuários
+- Gerenciamento de transações financeiras
+- Configurações personalizadas
 
-There are several ways of editing your application.
-
-**Use Lovable**
-
-Simply visit the [Lovable Project](https://lovable.dev/projects/c88a770f-9e39-4ea3-9648-5b13cb0894a7) and start prompting.
-
-Changes made via Lovable will be committed automatically to this repo.
-
-**Use your preferred IDE**
-
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
-
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
-
-Follow these steps:
-
-```sh
-# Step 1: Clone the repository using the project's Git URL.
-git clone <YOUR_GIT_URL>
-
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
-
-# Step 3: Install the necessary dependencies.
-npm i
-
-# Step 4: Start the development server with auto-reloading and an instant preview.
-npm run dev
-```
-
-**Edit a file directly in GitHub**
-
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
-
-**Use GitHub Codespaces**
-
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
-
-## What technologies are used for this project?
-
-This project is built with:
-
+## Tecnologias Utilizadas
 - Vite
 - TypeScript
 - React
 - shadcn-ui
 - Tailwind CSS
+- Supabase (backend)
+- React Query (gerenciamento de estado)
+- React Router DOM (navegação)
+- Lucide React (ícones)
+- Recharts (gráficos)
 
-## How can I deploy this project?
+## Estrutura de Rotas
+- `/` - Página inicial com apresentação do serviço
+- `/auth` - Página de autenticação
+- `/dashboard` - Dashboard principal (rota protegida)
+- `/transactions` - Gerenciamento de transações (rota protegida)
+- `/settings` - Configurações do usuário (rota protegida)
 
-Simply open [Lovable](https://lovable.dev/projects/c88a770f-9e39-4ea3-9648-5b13cb0894a7) and click on Share -> Publish.
+## Como Executar o Projeto
 
-## Can I connect a custom domain to my Lovable project?
+1. Clone o repositório:
+```sh
+git clone <SEU_URL_DO_REPOSITORIO>
+```
 
-Yes, you can!
+2. Navegue até o diretório do projeto:
+```sh
+cd mark-down-to-web
+```
 
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
+3. Instale as dependências:
+```sh
+npm install
+```
 
-Read more here: [Setting up a custom domain](https://docs.lovable.dev/features/custom-domain#custom-domain)
+4. Configure as variáveis de ambiente:
+Crie um arquivo `.env` na raiz do projeto com as variáveis necessárias para conexão com o Supabase e outros serviços.
+
+5. Inicie o servidor de desenvolvimento:
+```sh
+npm run dev
+```
+
+A aplicação estará disponível em `http://localhost:5173`
+
+## Scripts Disponíveis
+- `npm run dev` - Inicia o servidor de desenvolvimento
+- `npm run build` - Cria uma build de produção
+- `npm run build:dev` - Cria uma build de desenvolvimento
+- `npm run lint` - Executa o ESLint
+- `npm run preview` - Pré-visualiza a build localmente
+
+## Histórico de Alterações
+
+### Primeira documentação do projeto (22/10/2025)
+- Criada documentação inicial para o dashboard financeiro SetDívidas
+- Descrito a funcionalidade real do projeto, apesar do nome do diretório ser enganoso
+- Documentadas as tecnologias utilizadas e estrutura de rotas
+- Adicionada explicação sobre o propósito da aplicação
