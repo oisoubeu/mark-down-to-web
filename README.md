@@ -68,6 +68,10 @@ A aplicação estará disponível em `http://localhost:5173`
 
 ## Histórico de Alterações
 
+### Configuração do sistema de rastreamento de alterações no README (22/10/2025)
+- Configuração do sistema de rastreamento de alterações no README
+
+
 ### Primeira documentação do projeto (22/10/2025)
 - Criada documentação inicial para o dashboard financeiro SetDívidas
 - Descrito a funcionalidade real do projeto, apesar do nome do diretório ser enganoso
