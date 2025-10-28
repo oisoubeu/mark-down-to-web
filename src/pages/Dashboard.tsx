@@ -31,13 +31,22 @@ interface Profile {
   salary_day: number;
 }
 
+interface Category {
+  id: string;
+  name: string;
+  color: string;
+  icon: string | null;
+}
+
 export default function Dashboard() {
   const { user } = useAuth();
   const navigate = useNavigate();
   const [transactions, setTransactions] = useState<Transaction[]>([]);
+  const [categories, setCategories] = useState<Category[]>([]);
   const [profile, setProfile] = useState<Profile | null>(null);
   const [loading, setLoading] = useState(true);
   const [selectedMonth, setSelectedMonth] = useState(format(new Date(), "yyyy-MM"));
+  const [selectedCategory, setSelectedCategory] = useState<string>("all");
 
   useEffect(() => {
     if (!user) {
@@ -45,7 +54,7 @@ export default function Dashboard() {
       return;
     }
     fetchData();
-  }, [user, navigate, selectedMonth]);
+  }, [user, navigate, selectedMonth, selectedCategory]);
 
   const fetchData = async () => {
     try {
@@ -53,13 +62,28 @@ export default function Dashboard() {
       const startDate = startOfMonth(monthDate);
       const endDate = endOfMonth(monthDate);
 
-      // Fetch transactions for selected month
-      const { data: transactionsData, error: transactionsError } = await supabase
+      // Fetch categories
+      const { data: categoriesData, error: categoriesError } = await supabase
+        .from("categories")
+        .select("*")
+        .order("name");
+
+      if (categoriesError) throw categoriesError;
+      setCategories((categoriesData as Category[]) || []);
+
+      // Build query for transactions
+      let query = supabase
         .from("transactions")
         .select("*")
         .gte("date", format(startDate, "yyyy-MM-dd"))
-        .lte("date", format(endDate, "yyyy-MM-dd"))
-        .order("date", { ascending: false });
+        .lte("date", format(endDate, "yyyy-MM-dd"));
+
+      // Add category filter if selected
+      if (selectedCategory !== "all") {
+        query = query.eq("category_id", selectedCategory);
+      }
+
+      const { data: transactionsData, error: transactionsError } = await query.order("date", { ascending: false });
 
       if (transactionsError) throw transactionsError;
       setTransactions((transactionsData as Transaction[]) || []);
@@ -123,20 +147,36 @@ export default function Dashboard() {
   return (
     <DashboardLayout>
       <div className="space-y-8">
-        <div className="flex justify-between items-center">
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
           <h1 className="text-3xl font-bold">Dashboard</h1>
-          <Select value={selectedMonth} onValueChange={setSelectedMonth}>
-            <SelectTrigger className="w-[240px]">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              {getMonthOptions().map((option) => (
-                <SelectItem key={option.value} value={option.value}>
-                  {option.label}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+          <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
+            <Select value={selectedMonth} onValueChange={setSelectedMonth}>
+              <SelectTrigger className="w-full sm:w-[200px]">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {getMonthOptions().map((option) => (
+                  <SelectItem key={option.value} value={option.value}>
+                    {option.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <Select value={selectedCategory} onValueChange={setSelectedCategory}>
+              <SelectTrigger className="w-full sm:w-[200px]">
+                <SelectValue placeholder="Todas categorias" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Todas categorias</SelectItem>
+                {categories.map((category) => (
+                  <SelectItem key={category.id} value={category.id}>
+                    {category.icon && <span className="mr-2">{category.icon}</span>}
+                    {category.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
         </div>
 
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
