@@ -1,15 +1,25 @@
-import { useEffect, useState } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { DashboardLayout } from '@/components/DashboardLayout';
-import { supabase } from '@/integrations/supabase/client';
-import { useAuth } from '@/contexts/AuthContext';
-import { TrendingUp, TrendingDown, Wallet, Target } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { useNavigate } from 'react-router-dom';
+import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/contexts/AuthContext";
+import { DashboardLayout } from "@/components/DashboardLayout";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { ArrowUpCircle, ArrowDownCircle, DollarSign, Calendar } from "lucide-react";
+import { format, startOfMonth, endOfMonth } from "date-fns";
+import { ptBR } from "date-fns/locale";
+import { getNextSalaryDate } from "@/lib/businessDays";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 interface Transaction {
   id: string;
-  type: 'income' | 'expense';
+  type: "income" | "expense";
   amount: number;
   description: string;
   date: string;
@@ -27,61 +37,84 @@ export default function Dashboard() {
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [profile, setProfile] = useState<Profile | null>(null);
   const [loading, setLoading] = useState(true);
+  const [selectedMonth, setSelectedMonth] = useState(format(new Date(), "yyyy-MM"));
 
   useEffect(() => {
-    if (!user) return;
-
-    const fetchData = async () => {
-      const [transactionsRes, profileRes] = await Promise.all([
-        supabase
-          .from('transactions')
-          .select('*')
-          .eq('user_id', user.id)
-          .order('date', { ascending: false })
-          .limit(5),
-        supabase
-          .from('profiles')
-          .select('salary_amount, salary_day')
-          .eq('id', user.id)
-          .single()
-      ]);
-
-      if (transactionsRes.data) setTransactions(transactionsRes.data as Transaction[]);
-      if (profileRes.data) setProfile(profileRes.data);
-      setLoading(false);
-    };
-
+    if (!user) {
+      navigate("/auth");
+      return;
+    }
     fetchData();
-  }, [user]);
+  }, [user, navigate, selectedMonth]);
 
+  const fetchData = async () => {
+    try {
+      const monthDate = new Date(selectedMonth + "-01");
+      const startDate = startOfMonth(monthDate);
+      const endDate = endOfMonth(monthDate);
+
+      // Fetch transactions for selected month
+      const { data: transactionsData, error: transactionsError } = await supabase
+        .from("transactions")
+        .select("*")
+        .gte("date", format(startDate, "yyyy-MM-dd"))
+        .lte("date", format(endDate, "yyyy-MM-dd"))
+        .order("date", { ascending: false });
+
+      if (transactionsError) throw transactionsError;
+      setTransactions((transactionsData as Transaction[]) || []);
+
+      // Fetch profile
+      const { data: profileData, error: profileError } = await supabase
+        .from("profiles")
+        .select("*")
+        .eq("id", user.id)
+        .single();
+
+      if (profileError) throw profileError;
+      setProfile(profileData as Profile);
+    } catch (error) {
+      console.error("Error fetching data:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const salaryAmount = Number(profile?.salary_amount || 0);
+  
   const totalIncome = transactions
-    .filter((t) => t.type === 'income')
-    .reduce((sum, t) => sum + Number(t.amount), 0);
+    .filter((t) => t.type === "income")
+    .reduce((sum, t) => sum + Number(t.amount), 0) + salaryAmount;
 
   const totalExpense = transactions
-    .filter((t) => t.type === 'expense')
+    .filter((t) => t.type === "expense")
     .reduce((sum, t) => sum + Number(t.amount), 0);
 
   const balance = totalIncome - totalExpense;
 
-  const getNextSalaryDate = () => {
-    if (!profile) return 'Não configurado';
+  const nextSalaryDateFormatted = profile?.salary_day
+    ? format(getNextSalaryDate(profile.salary_day), "dd/MM/yyyy", { locale: ptBR })
+    : "Não configurado";
+
+  // Generate month options (last 12 months + next 3 months)
+  const getMonthOptions = () => {
+    const options = [];
     const today = new Date();
-    const day = profile.salary_day;
-    let salaryDate = new Date(today.getFullYear(), today.getMonth(), day);
-    
-    if (salaryDate < today) {
-      salaryDate = new Date(today.getFullYear(), today.getMonth() + 1, day);
+    for (let i = -12; i <= 3; i++) {
+      const date = new Date(today.getFullYear(), today.getMonth() + i, 1);
+      options.push({
+        value: format(date, "yyyy-MM"),
+        label: format(date, "MMMM 'de' yyyy", { locale: ptBR }),
+      });
     }
-    
-    return salaryDate.toLocaleDateString('pt-BR', { day: '2-digit', month: 'long' });
+    return options;
   };
 
   if (loading) {
     return (
       <DashboardLayout>
-        <div className="flex items-center justify-center min-h-[400px]">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary" />
+        <div className="flex items-center justify-center h-64">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
         </div>
       </DashboardLayout>
     );
@@ -89,24 +122,35 @@ export default function Dashboard() {
 
   return (
     <DashboardLayout>
-      <div className="space-y-6">
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight">Dashboard</h1>
-          <p className="text-muted-foreground">Visão geral das suas finanças</p>
+      <div className="space-y-8">
+        <div className="flex justify-between items-center">
+          <h1 className="text-3xl font-bold">Dashboard</h1>
+          <Select value={selectedMonth} onValueChange={setSelectedMonth}>
+            <SelectTrigger className="w-[240px]">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {getMonthOptions().map((option) => (
+                <SelectItem key={option.value} value={option.value}>
+                  {option.label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
         </div>
 
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">Saldo Atual</CardTitle>
-              <Wallet className={`h-4 w-4 ${balance >= 0 ? 'text-success' : 'text-destructive'}`} />
+              <DollarSign className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <div className={`text-2xl font-bold ${balance >= 0 ? 'text-success' : 'text-destructive'}`}>
-                R$ {balance.toFixed(2)}
+              <div className={`text-2xl font-bold ${balance >= 0 ? "text-success" : "text-destructive"}`}>
+                R$ {balance.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
               </div>
-              <p className="text-xs text-muted-foreground mt-1">
-                {balance >= 0 ? 'Saldo positivo' : 'Saldo negativo'}
+              <p className="text-xs text-muted-foreground">
+                {balance >= 0 ? "Positivo" : "Negativo"}
               </p>
             </CardContent>
           </Card>
@@ -114,35 +158,42 @@ export default function Dashboard() {
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">Receitas</CardTitle>
-              <TrendingUp className="h-4 w-4 text-success" />
+              <ArrowUpCircle className="h-4 w-4 text-success" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold text-success">R$ {totalIncome.toFixed(2)}</div>
-              <p className="text-xs text-muted-foreground mt-1">Total recebido</p>
+              <div className="text-2xl font-bold text-success">
+                R$ {totalIncome.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
+              </div>
+              <p className="text-xs text-muted-foreground">Total do mês</p>
             </CardContent>
           </Card>
 
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">Despesas</CardTitle>
-              <TrendingDown className="h-4 w-4 text-destructive" />
+              <ArrowDownCircle className="h-4 w-4 text-destructive" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold text-destructive">R$ {totalExpense.toFixed(2)}</div>
-              <p className="text-xs text-muted-foreground mt-1">Total gasto</p>
+              <div className="text-2xl font-bold text-destructive">
+                R$ {totalExpense.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
+              </div>
+              <p className="text-xs text-muted-foreground">Total do mês</p>
             </CardContent>
           </Card>
 
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">Próximo Salário</CardTitle>
-              <Target className="h-4 w-4 text-primary" />
+              <Calendar className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">
-                {profile?.salary_amount ? `R$ ${profile.salary_amount}` : 'R$ 0'}
-              </div>
-              <p className="text-xs text-muted-foreground mt-1">{getNextSalaryDate()}</p>
+              <div className="text-2xl font-bold">{nextSalaryDateFormatted}</div>
+              <p className="text-xs text-muted-foreground">
+                R$ {salaryAmount.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
+              </p>
+              <p className="text-xs text-muted-foreground mt-1">
+                {profile?.salary_day ? `${profile.salary_day}º dia útil` : ""}
+              </p>
             </CardContent>
           </Card>
         </div>
@@ -151,51 +202,39 @@ export default function Dashboard() {
           <CardHeader>
             <div className="flex items-center justify-between">
               <CardTitle>Transações Recentes</CardTitle>
-              <Button variant="outline" size="sm" onClick={() => navigate('/transactions')}>
-                Ver todas
+              <Button variant="outline" onClick={() => navigate("/transactions")}>
+                Ver Todas
               </Button>
             </div>
           </CardHeader>
           <CardContent>
             {transactions.length === 0 ? (
               <div className="text-center py-8">
-                <p className="text-muted-foreground mb-4">Nenhuma transação encontrada</p>
-                <Button onClick={() => navigate('/transactions')}>
-                  Adicionar primeira transação
+                <p className="text-muted-foreground mb-4">Nenhuma transação encontrada neste mês</p>
+                <Button onClick={() => navigate("/transactions")}>
+                  Adicionar Transação
                 </Button>
               </div>
             ) : (
               <div className="space-y-4">
-                {transactions.map((transaction) => (
+                {transactions.slice(0, 5).map((transaction) => (
                   <div
                     key={transaction.id}
-                    className="flex items-center justify-between border-b pb-3 last:border-0"
+                    className="flex items-center justify-between pb-3 border-b last:border-0"
                   >
-                    <div className="flex items-center gap-3">
-                      <div
-                        className={`h-10 w-10 rounded-full flex items-center justify-center ${
-                          transaction.type === 'income' ? 'bg-success/10' : 'bg-destructive/10'
-                        }`}
-                      >
-                        {transaction.type === 'income' ? (
-                          <TrendingUp className="h-5 w-5 text-success" />
-                        ) : (
-                          <TrendingDown className="h-5 w-5 text-destructive" />
-                        )}
-                      </div>
-                      <div>
-                        <p className="font-medium">{transaction.description || 'Sem descrição'}</p>
-                        <p className="text-sm text-muted-foreground">
-                          {new Date(transaction.date).toLocaleDateString('pt-BR')}
-                        </p>
-                      </div>
+                    <div>
+                      <p className="font-medium">{transaction.description || "Sem descrição"}</p>
+                      <p className="text-sm text-muted-foreground">
+                        {format(new Date(transaction.date), "dd/MM/yyyy")}
+                      </p>
                     </div>
                     <div
                       className={`text-lg font-bold ${
-                        transaction.type === 'income' ? 'text-success' : 'text-destructive'
+                        transaction.type === "income" ? "text-success" : "text-destructive"
                       }`}
                     >
-                      {transaction.type === 'income' ? '+' : '-'} R$ {Number(transaction.amount).toFixed(2)}
+                      {transaction.type === "income" ? "+" : "-"}R${" "}
+                      {Number(transaction.amount).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
                     </div>
                   </div>
                 ))}

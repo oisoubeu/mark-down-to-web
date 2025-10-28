@@ -11,7 +11,7 @@ import { toast } from 'sonner';
 export default function Settings() {
   const { user } = useAuth();
   const [loading, setLoading] = useState(false);
-  const [profile, setProfile] = useState({
+  const [formData, setFormData] = useState({
     name: '',
     salary_amount: '',
     salary_day: ''
@@ -28,7 +28,7 @@ export default function Settings() {
         .single();
 
       if (data) {
-        setProfile({
+        setFormData({
           name: data.name || '',
           salary_amount: data.salary_amount?.toString() || '',
           salary_day: data.salary_day?.toString() || ''
@@ -46,9 +46,9 @@ export default function Settings() {
     const { error } = await supabase
       .from('profiles')
       .update({
-        name: profile.name,
-        salary_amount: profile.salary_amount ? parseFloat(profile.salary_amount) : 0,
-        salary_day: profile.salary_day ? parseInt(profile.salary_day) : 5
+        name: formData.name,
+        salary_amount: formData.salary_amount ? parseFloat(formData.salary_amount) : 0,
+        salary_day: formData.salary_day ? parseInt(formData.salary_day) : 5
       })
       .eq('id', user?.id);
 
@@ -81,8 +81,8 @@ export default function Settings() {
                   <Label htmlFor="name">Nome</Label>
                   <Input
                     id="name"
-                    value={profile.name}
-                    onChange={(e) => setProfile({ ...profile, name: e.target.value })}
+                    value={formData.name}
+                    onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                   />
                 </div>
 
@@ -113,23 +113,25 @@ export default function Settings() {
                     type="number"
                     step="0.01"
                     placeholder="0.00"
-                    value={profile.salary_amount}
-                    onChange={(e) => setProfile({ ...profile, salary_amount: e.target.value })}
+                    value={formData.salary_amount}
+                    onChange={(e) => setFormData({ ...formData, salary_amount: e.target.value })}
                   />
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="day">Dia do Recebimento</Label>
+                  <Label htmlFor="day">Dia Útil do Salário</Label>
                   <Input
                     id="day"
                     type="number"
                     min="1"
                     max="31"
                     placeholder="5"
-                    value={profile.salary_day}
-                    onChange={(e) => setProfile({ ...profile, salary_day: e.target.value })}
+                    value={formData.salary_day}
+                    onChange={(e) => setFormData({ ...formData, salary_day: e.target.value })}
                   />
-                  <p className="text-xs text-muted-foreground">Digite um número entre 1 e 31</p>
+                  <p className="text-xs text-muted-foreground">
+                    Informe o número do dia útil (ex: 5 = quinto dia útil do mês)
+                  </p>
                 </div>
 
                 <Button type="submit" disabled={loading}>

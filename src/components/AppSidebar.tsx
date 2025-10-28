@@ -1,4 +1,4 @@
-import { Home, TrendingUp, Settings, LogOut, Wallet } from 'lucide-react';
+import { Home, TrendingUp, FolderOpen, Settings, LogOut, Wallet } from 'lucide-react';
 import { NavLink, useLocation } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import {
@@ -17,6 +17,7 @@ import {
 const menuItems = [
   { title: 'Dashboard', url: '/dashboard', icon: Home },
   { title: 'Transações', url: '/transactions', icon: TrendingUp },
+  { title: 'Categorias', url: '/categories', icon: FolderOpen },
   { title: 'Configurações', url: '/settings', icon: Settings },
 ];
 
