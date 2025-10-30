@@ -9,6 +9,7 @@ import { ArrowUpCircle, ArrowDownCircle, DollarSign, Calendar } from "lucide-rea
 import { format, startOfMonth, endOfMonth } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { getNextSalaryDate } from "@/lib/businessDays";
+import { formatDateForDB } from "@/lib/dateUtils";
 import {
   Select,
   SelectContent,
@@ -75,8 +76,8 @@ export default function Dashboard() {
       let query = supabase
         .from("transactions")
         .select("*")
-        .gte("date", format(startDate, "yyyy-MM-dd"))
-        .lte("date", format(endDate, "yyyy-MM-dd"));
+        .gte("date", formatDateForDB(startDate))
+        .lte("date", formatDateForDB(endDate));
 
       // Add category filter if selected
       if (selectedCategory !== "all") {

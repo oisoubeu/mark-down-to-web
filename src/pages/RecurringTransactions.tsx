@@ -118,7 +118,15 @@ export default function RecurringTransactions() {
 
         if (error) throw error;
 
-        await updateRecurringTransactions(updated as RecurringTransaction, user.id);
+        await updateRecurringTransactions(
+          user.id,
+          updated.id,
+          updated.name,
+          Number(updated.amount),
+          Number(updated.day_of_month),
+          updated.type as "income" | "expense",
+          updated.category_id
+        );
 
         toast({
           title: "Transação fixa atualizada",
@@ -141,7 +149,15 @@ export default function RecurringTransactions() {
 
         if (error) throw error;
 
-        await generateRecurringTransactions(created as RecurringTransaction, user.id);
+        await generateRecurringTransactions(
+          user.id,
+          created.id,
+          created.name,
+          Number(created.amount),
+          Number(created.day_of_month),
+          created.type as "income" | "expense",
+          created.category_id
+        );
 
         toast({
           title: "Transação fixa criada",

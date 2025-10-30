@@ -1,6 +1,7 @@
 import { supabase } from "@/integrations/supabase/client";
-import { format, startOfMonth, endOfMonth, addMonths } from "date-fns";
+import { startOfMonth, endOfMonth, addMonths } from "date-fns";
 import { getBusinessDay } from "./businessDays";
+import { formatDateForDB, getCurrentDateInCuiaba } from "./dateUtils";
 
 /**
  * Creates salary transactions for current and next month
@@ -10,7 +11,7 @@ export async function generateSalaryTransactions(
   salaryAmount: number,
   salaryDay: number
 ) {
-  const currentDate = new Date();
+  const currentDate = getCurrentDateInCuiaba();
   const months = [currentDate, addMonths(currentDate, 1)];
   
   const transactionsToCreate = [];
@@ -25,8 +26,8 @@ export async function generateSalaryTransactions(
       .select("id")
       .eq("is_salary", true)
       .eq("user_id", userId)
-      .gte("date", format(monthStart, "yyyy-MM-dd"))
-      .lte("date", format(monthEnd, "yyyy-MM-dd"))
+      .gte("date", formatDateForDB(monthStart))
+      .lte("date", formatDateForDB(monthEnd))
       .maybeSingle();
 
     if (!existing) {
@@ -39,7 +40,7 @@ export async function generateSalaryTransactions(
         type: "income",
         amount: salaryAmount,
         description: "Salário",
-        date: format(salaryDate, "yyyy-MM-dd"),
+        date: formatDateForDB(salaryDate),
       });
     }
   }
@@ -61,7 +62,7 @@ export async function updateSalaryTransactions(
   salaryAmount: number,
   salaryDay: number
 ) {
-  const currentDate = new Date();
+  const currentDate = getCurrentDateInCuiaba();
   const nextMonth = addMonths(currentDate, 1);
   
   const months = [currentDate, nextMonth];
@@ -76,8 +77,8 @@ export async function updateSalaryTransactions(
       .select("id")
       .eq("is_salary", true)
       .eq("user_id", userId)
-      .gte("date", format(monthStart, "yyyy-MM-dd"))
-      .lte("date", format(monthEnd, "yyyy-MM-dd"))
+      .gte("date", formatDateForDB(monthStart))
+      .lte("date", formatDateForDB(monthEnd))
       .maybeSingle();
 
     const salaryDate = getBusinessDay(month.getFullYear(), month.getMonth(), salaryDay);
@@ -88,7 +89,7 @@ export async function updateSalaryTransactions(
         .from("transactions")
         .update({
           amount: salaryAmount,
-          date: format(salaryDate, "yyyy-MM-dd"),
+          date: formatDateForDB(salaryDate),
         })
         .eq("id", existing.id);
     } else {
@@ -101,7 +102,7 @@ export async function updateSalaryTransactions(
           type: "income",
           amount: salaryAmount,
           description: "Salário",
-          date: format(salaryDate, "yyyy-MM-dd"),
+          date: formatDateForDB(salaryDate),
         });
     }
   }

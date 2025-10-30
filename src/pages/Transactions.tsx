@@ -10,6 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { toast } from 'sonner';
 import { Plus, TrendingUp, TrendingDown, Trash2 } from 'lucide-react';
+import { getTodayFormatted } from '@/lib/dateUtils';
 
 interface Transaction {
   id: string;
@@ -37,7 +38,7 @@ export default function Transactions() {
     type: 'expense' as 'income' | 'expense',
     amount: '',
     description: '',
-    date: new Date().toISOString().split('T')[0],
+    date: getTodayFormatted(),
     category_id: ''
   });
 
@@ -90,7 +91,7 @@ export default function Transactions() {
       type: 'expense',
       amount: '',
       description: '',
-      date: new Date().toISOString().split('T')[0],
+      date: getTodayFormatted(),
       category_id: ''
     });
     fetchData();

@@ -1,23 +1,20 @@
 import { supabase } from "@/integrations/supabase/client";
-import { format, startOfMonth, endOfMonth, addMonths } from "date-fns";
-
-interface RecurringTransaction {
-  id: string;
-  name: string;
-  amount: number;
-  day_of_month: number;
-  category_id: string | null;
-  type: "income" | "expense";
-}
+import { startOfMonth, endOfMonth, addMonths } from "date-fns";
+import { formatDateForDB, getCurrentDateInCuiaba } from "./dateUtils";
 
 /**
  * Creates transactions for current and next month based on recurring transaction
  */
 export async function generateRecurringTransactions(
-  recurringTransaction: RecurringTransaction,
-  userId: string
+  userId: string,
+  recurringId: string,
+  name: string,
+  amount: number,
+  dayOfMonth: number,
+  type: "income" | "expense",
+  categoryId: string | null
 ) {
-  const currentDate = new Date();
+  const currentDate = getCurrentDateInCuiaba();
   const months = [currentDate, addMonths(currentDate, 1)];
   
   const transactionsToCreate = [];
@@ -30,26 +27,28 @@ export async function generateRecurringTransactions(
     const { data: existing } = await supabase
       .from("transactions")
       .select("id")
-      .eq("recurring_transaction_id", recurringTransaction.id)
-      .gte("date", format(monthStart, "yyyy-MM-dd"))
-      .lte("date", format(monthEnd, "yyyy-MM-dd"))
-      .single();
+      .eq("recurring_transaction_id", recurringId)
+      .eq("user_id", userId)
+      .gte("date", formatDateForDB(monthStart))
+      .lte("date", formatDateForDB(monthEnd))
+      .maybeSingle();
 
     if (!existing) {
       // Create transaction date (use day_of_month, or last day if month is shorter)
       const year = month.getFullYear();
       const monthNumber = month.getMonth();
       const lastDayOfMonth = endOfMonth(month).getDate();
-      const day = Math.min(recurringTransaction.day_of_month, lastDayOfMonth);
+      const day = Math.min(dayOfMonth, lastDayOfMonth);
+      const transactionDate = new Date(year, monthNumber, day);
       
       transactionsToCreate.push({
         user_id: userId,
-        recurring_transaction_id: recurringTransaction.id,
-        type: recurringTransaction.type,
-        amount: recurringTransaction.amount,
-        description: recurringTransaction.name,
-        category_id: recurringTransaction.category_id,
-        date: format(new Date(year, monthNumber, day), "yyyy-MM-dd"),
+        recurring_transaction_id: recurringId,
+        type: type,
+        amount: amount,
+        description: name,
+        date: formatDateForDB(transactionDate),
+        category_id: categoryId,
       });
     }
   }
@@ -67,10 +66,15 @@ export async function generateRecurringTransactions(
  * Updates transactions for current and next month when recurring transaction is edited
  */
 export async function updateRecurringTransactions(
-  recurringTransaction: RecurringTransaction,
-  userId: string
+  userId: string,
+  recurringId: string,
+  name: string,
+  amount: number,
+  dayOfMonth: number,
+  type: "income" | "expense",
+  categoryId: string | null
 ) {
-  const currentDate = new Date();
+  const currentDate = getCurrentDateInCuiaba();
   const nextMonth = addMonths(currentDate, 1);
   
   const months = [currentDate, nextMonth];
@@ -83,27 +87,27 @@ export async function updateRecurringTransactions(
     const { data: existing } = await supabase
       .from("transactions")
       .select("id")
-      .eq("recurring_transaction_id", recurringTransaction.id)
-      .gte("date", format(monthStart, "yyyy-MM-dd"))
-      .lte("date", format(monthEnd, "yyyy-MM-dd"))
+      .eq("recurring_transaction_id", recurringId)
+      .eq("user_id", userId)
+      .gte("date", formatDateForDB(monthStart))
+      .lte("date", formatDateForDB(monthEnd))
       .maybeSingle();
 
     const year = month.getFullYear();
     const monthNumber = month.getMonth();
     const lastDayOfMonth = endOfMonth(month).getDate();
-    const day = Math.min(recurringTransaction.day_of_month, lastDayOfMonth);
-    const transactionDate = format(new Date(year, monthNumber, day), "yyyy-MM-dd");
+    const day = Math.min(dayOfMonth, lastDayOfMonth);
+    const transactionDate = new Date(year, monthNumber, day);
 
     if (existing) {
       // Update existing transaction
       await supabase
         .from("transactions")
         .update({
-          amount: recurringTransaction.amount,
-          description: recurringTransaction.name,
-          category_id: recurringTransaction.category_id,
-          type: recurringTransaction.type,
-          date: transactionDate,
+          amount: amount,
+          description: name,
+          date: formatDateForDB(transactionDate),
+          category_id: categoryId,
         })
         .eq("id", existing.id);
     } else {
@@ -112,12 +116,12 @@ export async function updateRecurringTransactions(
         .from("transactions")
         .insert({
           user_id: userId,
-          recurring_transaction_id: recurringTransaction.id,
-          type: recurringTransaction.type,
-          amount: recurringTransaction.amount,
-          description: recurringTransaction.name,
-          category_id: recurringTransaction.category_id,
-          date: transactionDate,
+          recurring_transaction_id: recurringId,
+          type: type,
+          amount: amount,
+          description: name,
+          date: formatDateForDB(transactionDate),
+          category_id: categoryId,
         });
     }
   }
@@ -127,12 +131,12 @@ export async function updateRecurringTransactions(
  * Deletes all future transactions associated with a recurring transaction
  */
 export async function deleteRecurringTransactions(recurringTransactionId: string) {
-  const currentDate = new Date();
+  const currentDate = getCurrentDateInCuiaba();
   const monthStart = startOfMonth(currentDate);
   
   await supabase
     .from("transactions")
     .delete()
     .eq("recurring_transaction_id", recurringTransactionId)
-    .gte("date", format(monthStart, "yyyy-MM-dd"));
+    .gte("date", formatDateForDB(monthStart));
 }
