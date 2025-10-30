@@ -104,11 +104,9 @@ export default function Dashboard() {
     }
   };
 
-  const salaryAmount = Number(profile?.salary_amount || 0);
-  
   const totalIncome = transactions
     .filter((t) => t.type === "income")
-    .reduce((sum, t) => sum + Number(t.amount), 0) + salaryAmount;
+    .reduce((sum, t) => sum + Number(t.amount), 0);
 
   const totalExpense = transactions
     .filter((t) => t.type === "expense")
@@ -229,7 +227,7 @@ export default function Dashboard() {
             <CardContent>
               <div className="text-2xl font-bold">{nextSalaryDateFormatted}</div>
               <p className="text-xs text-muted-foreground">
-                R$ {salaryAmount.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
+                R$ {Number(profile?.salary_amount || 0).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
               </p>
               <p className="text-xs text-muted-foreground mt-1">
                 {profile?.salary_day ? `${profile.salary_day}º dia útil` : ""}

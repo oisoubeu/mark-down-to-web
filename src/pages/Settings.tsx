@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { toast } from 'sonner';
+import { generateSalaryTransactions, updateSalaryTransactions } from '@/lib/salaryTransactions';
 
 export default function Settings() {
   const { user } = useAuth();
@@ -43,19 +44,51 @@ export default function Settings() {
     e.preventDefault();
     setLoading(true);
 
-    const { error } = await supabase
-      .from('profiles')
-      .update({
-        name: formData.name,
-        salary_amount: formData.salary_amount ? parseFloat(formData.salary_amount) : 0,
-        salary_day: formData.salary_day ? parseInt(formData.salary_day) : 5
-      })
-      .eq('id', user?.id);
+    try {
+      // Get old values to check if salary changed
+      const { data: oldProfile } = await supabase
+        .from('profiles')
+        .select('salary_amount, salary_day')
+        .eq('id', user?.id)
+        .single();
 
-    if (error) {
+      const { error } = await supabase
+        .from('profiles')
+        .update({
+          name: formData.name,
+          salary_amount: formData.salary_amount ? parseFloat(formData.salary_amount) : 0,
+          salary_day: formData.salary_day ? parseInt(formData.salary_day) : 5
+        })
+        .eq('id', user?.id);
+
+      if (error) throw error;
+
+      // If salary was configured and changed, update transactions
+      const salaryAmount = formData.salary_amount ? parseFloat(formData.salary_amount) : 0;
+      const salaryDay = formData.salary_day ? parseInt(formData.salary_day) : 5;
+      
+      if (salaryAmount && salaryDay && user?.id) {
+        const salaryChanged = 
+          oldProfile?.salary_amount !== salaryAmount ||
+          oldProfile?.salary_day !== salaryDay;
+
+        if (salaryChanged) {
+          if (oldProfile?.salary_amount && oldProfile?.salary_day) {
+            await updateSalaryTransactions(user.id, salaryAmount, salaryDay);
+            toast.success('Perfil atualizado e extratos de salário atualizados!');
+          } else {
+            await generateSalaryTransactions(user.id, salaryAmount, salaryDay);
+            toast.success('Perfil atualizado e extratos de salário criados!');
+          }
+        } else {
+          toast.success('Perfil atualizado com sucesso!');
+        }
+      } else {
+        toast.success('Perfil atualizado com sucesso!');
+      }
+    } catch (error) {
+      console.error('Error updating profile:', error);
       toast.error('Erro ao atualizar perfil');
-    } else {
-      toast.success('Perfil atualizado com sucesso!');
     }
 
     setLoading(false);
